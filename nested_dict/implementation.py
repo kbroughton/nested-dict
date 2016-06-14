@@ -149,7 +149,8 @@ def nested_dict_from_dict(orig_dict, nd):
             nd[key] = value
     return nd
 
-combine_policy_options=[{'name': 'uniquely_extend_list', 'signature': (list,list), 
+default_combine_policy_options=[
+                  {'name': 'uniquely_extend_list', 'signature': (list,list), 
                    'combiner': lambda x,y: x + list(set(y) - set(x)) },
                   {'name': 'list_of_union', 'signature': (list,list), 
                    'combiner': lambda x,y: list(set(y) + set(x)) },
@@ -158,29 +159,29 @@ combine_policy_options=[{'name': 'uniquely_extend_list', 'signature': (list,list
                    ]
 
 
-def get_combine_policy(val1, val2, strategies, combine_policy_options):
+def get_combine_policy(val1, val2, combine_policies, combine_policy_options):
     for option in combine_policy_options: 
-        if ((type(val1),type(val2)) == option['signature']) and (option['name'] in strategies):
+        if ((type(val1),type(val2)) == option['signature']) and (option['name'] in combine_policies):
             return option['combiner']
     else:
         return None
 
-def _recursive_update(nd, other, strategies=[]):
+def _recursive_update(nd, other, combine_policies=[], combine_policy_options=[]):
     for key, value in iteritems(other):
         #print ("key=", key)
-        combine_policy = get_combine_policy(nd[key], other[key], strategies, combine_policy_options)
+        combine_policy = get_combine_policy(nd[key], other[key], combine_policies, combine_policy_options)
         #print("combine_policy for {} {} is {}".format(key, value, combine_policy))
         if isinstance(value, (dict,)):
 
             # recursive update if my item is nested_dict
             if isinstance(nd[key], (_recursive_dict,)):
                 #print ("recursive update", key, type(nd[key]))
-                _recursive_update(nd[key], other[key], strategies)
+                _recursive_update(nd[key], other[key], combine_policies)
 
             # update if my item is dict
             elif isinstance(nd[key], (dict,)):
                 #print ("update", key, type(nd[key]))
-                nd[key].update(other[key], strategies)
+                nd[key].update(other[key], combine_policies)
             # overwrite
             else:
                 #print ("self not nested dict or dict: overwrite", key)
@@ -208,9 +209,10 @@ class nested_dict(_recursive_dict):
     Uses defaultdict to automatically add levels of nested dicts and other types.
     """
 
-    def update(self, other, strategies=[]):
+    def update(self, other, combine_policies=[], combine_policy_options=[]):
         """Update recursively."""
-        _recursive_update(self, other, strategies)
+        combine_policy_options = combine_policy_options + default_combine_policy_options
+        _recursive_update(self, other, combine_policies, combine_policy_options)
 
     def __init__(self, *param, **named_param):
         """
