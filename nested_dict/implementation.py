@@ -149,26 +149,46 @@ def nested_dict_from_dict(orig_dict, nd):
             nd[key] = value
     return nd
 
+strategy_options=[{'name': 'uniquely_extend_list', 'signature': (list,list), 
+                   'combiner': lambda x,y: x + list(set(y) - set(x)) },
+                  {'name': 'list_of_union', 'signature': (list,list), 
+                   'combiner': lambda x,y: list(set(y) + set(x)) },
+                  {'name': 'symmetric_difference', 'signature': (set,set),
+                   'combiner': lambda x,y: x.symmetric_difference(y)},
+                   ]
 
-def _recursive_update(nd, other):
+
+def get_strategy(val1, val2, strategies, strategy_options):
+    for option in strategy_options: 
+        if ((type(val1),type(val2)) == option['signature']) and (option['name'] in strategies):
+            return option['combiner']
+    else:
+        return None
+
+def _recursive_update(nd, other, strategies=[]):
     for key, value in iteritems(other):
         #print ("key=", key)
+        strategy = get_strategy(nd[key], other[key], strategies, strategy_options)
+        print("strategy for {} {} is {}".format(key, value, strategy))
         if isinstance(value, (dict,)):
 
             # recursive update if my item is nested_dict
             if isinstance(nd[key], (_recursive_dict,)):
                 #print ("recursive update", key, type(nd[key]))
-                _recursive_update(nd[key], other[key])
+                _recursive_update(nd[key], other[key], strategies)
 
             # update if my item is dict
             elif isinstance(nd[key], (dict,)):
                 #print ("update", key, type(nd[key]))
-                nd[key].update(other[key])
-
+                nd[key].update(other[key], strategies)
             # overwrite
             else:
                 #print ("self not nested dict or dict: overwrite", key)
                 nd[key] = value
+        # combine by specified matching strategy
+        elif strategy:
+            print(nd[key], strategy(nd[key], value))
+            nd[key] = strategy(nd[key], value)        
         # other not dict: overwrite
         else:
             #print ("other not dict: overwrite", key)
@@ -188,9 +208,9 @@ class nested_dict(_recursive_dict):
     Uses defaultdict to automatically add levels of nested dicts and other types.
     """
 
-    def update(self, other):
+    def update(self, other, strategies=[]):
         """Update recursively."""
-        _recursive_update(self, other)
+        _recursive_update(self, other, strategies)
 
     def __init__(self, *param, **named_param):
         """
@@ -229,3 +249,4 @@ class nested_dict(_recursive_dict):
                         "2) an existing dict to be converted into a nested dict "
                         "(factory = %s. len(param) = %d, param = %s"
                         % (self.factory, len(param), param))
+
