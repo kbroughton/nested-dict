@@ -149,7 +149,7 @@ def nested_dict_from_dict(orig_dict, nd):
             nd[key] = value
     return nd
 
-strategy_options=[{'name': 'uniquely_extend_list', 'signature': (list,list), 
+combine_policy_options=[{'name': 'uniquely_extend_list', 'signature': (list,list), 
                    'combiner': lambda x,y: x + list(set(y) - set(x)) },
                   {'name': 'list_of_union', 'signature': (list,list), 
                    'combiner': lambda x,y: list(set(y) + set(x)) },
@@ -158,8 +158,8 @@ strategy_options=[{'name': 'uniquely_extend_list', 'signature': (list,list),
                    ]
 
 
-def get_strategy(val1, val2, strategies, strategy_options):
-    for option in strategy_options: 
+def get_combine_policy(val1, val2, strategies, combine_policy_options):
+    for option in combine_policy_options: 
         if ((type(val1),type(val2)) == option['signature']) and (option['name'] in strategies):
             return option['combiner']
     else:
@@ -168,8 +168,8 @@ def get_strategy(val1, val2, strategies, strategy_options):
 def _recursive_update(nd, other, strategies=[]):
     for key, value in iteritems(other):
         #print ("key=", key)
-        strategy = get_strategy(nd[key], other[key], strategies, strategy_options)
-        #print("strategy for {} {} is {}".format(key, value, strategy))
+        combine_policy = get_combine_policy(nd[key], other[key], strategies, combine_policy_options)
+        #print("combine_policy for {} {} is {}".format(key, value, combine_policy))
         if isinstance(value, (dict,)):
 
             # recursive update if my item is nested_dict
@@ -185,10 +185,10 @@ def _recursive_update(nd, other, strategies=[]):
             else:
                 #print ("self not nested dict or dict: overwrite", key)
                 nd[key] = value
-        # combine by specified matching strategy
-        elif strategy:
-            #print(nd[key], strategy(nd[key], value))
-            nd[key] = strategy(nd[key], value)        
+        # combine by specified matching combine_policy
+        elif combine_policy:
+            #print(nd[key], combine_policy(nd[key], value))
+            nd[key] = combine_policy(nd[key], value)        
         # other not dict: overwrite
         else:
             #print ("other not dict: overwrite", key)
