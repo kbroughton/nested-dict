@@ -254,23 +254,24 @@ class Test_nested_dict_methods(unittest.TestCase):
         nd1 = nested_dict.nested_dict({'a':1,'f':[1,3,3]})
         nd2 = nested_dict.nested_dict({'a':1,'f':[1,2]})
         nd1.update(nd2, combine_policies=['uniquely_extend_list'])
-        self.assertEqual(nd1.to_dict, {'a':1,'f':[1,3,3,2]})
+        self.assertEqual(nd1.to_dict(), {'a':1,'f':[1,3,3,2]})
 
         #
         # list_of_union
         #
         nd1 = nested_dict.nested_dict({'a':1,'f':[1,3,3]})
         nd2 = nested_dict.nested_dict({'a':1,'f':[1,2]})
-        nd1.update(nd2, combine_policies=['list_of_union'])
-        self.assertEqual(nd1.to_dict, {'a':1,'f':[1,3,2]})
+        nd1.update(nd2, combine_policies=['sorted_list_of_union'])
+        self.assertEqual(nd1.to_dict(), {'a':1,'f':[1,2,3]})
 
         #
         # custom_combine_policy
         #
         combine_policy_options=[
                   {'name': 'rabbits', 'signature': (list,list), 
-                   'combiner': lambda x,y: 'look rabbits' },
+                   'combiner': lambda x,y: 'look rabbits' }
+                ]
         nd1 = nested_dict.nested_dict({'a':1,'f':[1,3,3]})
         nd2 = nested_dict.nested_dict({'a':1,'f':[1,2]})
-        nd1.update(nd2, combine_policies=['rabbits'], combine_plicy_options=combine_policy_options)
-        self.assertEqual(nd1.to_dict, {'a':1,'f':'look rabbits'})
+        nd1.update(nd2, combine_policies=['rabbits'], combine_policy_options=combine_policy_options)
+        self.assertEqual(nd1.to_dict(), {'a':1,'f':'look rabbits'})

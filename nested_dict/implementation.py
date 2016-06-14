@@ -151,9 +151,9 @@ def nested_dict_from_dict(orig_dict, nd):
 
 default_combine_policy_options=[
                   {'name': 'uniquely_extend_list', 'signature': (list,list), 
-                   'combiner': lambda x,y: x + list(set(y) - set(x)) },
-                  {'name': 'list_of_union', 'signature': (list,list), 
-                   'combiner': lambda x,y: list(set(y) + set(x)) },
+                   'combiner': lambda x,y: x + [yy for yy in y if yy not in x] },
+                  {'name': 'sorted_list_of_union', 'signature': (list,list), 
+                   'combiner': lambda x,y: sorted(list(set(y).union(set(x)))) },
                   {'name': 'symmetric_difference', 'signature': (set,set),
                    'combiner': lambda x,y: x.symmetric_difference(y)},
                    ]
