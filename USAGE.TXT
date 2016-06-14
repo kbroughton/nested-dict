@@ -29,3 +29,28 @@
 	nd4["human"]["chr1"]+=3
 	nd4["human"]["chr3"]+=4
 
+3) Dictionaries with lists or sets (or arbitrary objects) can have custom merge strategies:
+
+
+	> nd1 = nested_dict({'a':1,'f':[1,3]})
+	> nd2 = nested_dict({'a':1,'f':[1,2]})
+	
+	# use built-in strategy to merge lists
+	> nd1.update(nd2, strategies=['uniquely_extend_list'])
+	{'a':1,'f':[1,3,2]}
+	
+Here we are using the built-in strategy_options.  
+If your dict contains structures you may specify which ones update() will use with the strategies kwarg (list).
+You may also supply your own strategy_options kwarg (list)
+
+	default_strategy_options=[
+				  {'name': 'uniquely_extend_list', 'signature': (list,list), 
+                   'combiner': lambda x,y: x + list(set(y) - set(x)) },
+                  
+                  {'name': 'list_of_union', 'signature': (list,list), 
+                   'combiner': lambda x,y: list(set(y) + set(x)) },
+                  
+                  {'name': 'symmetric_difference', 'signature': (set,set),
+                   'combiner': lambda x,y: x.symmetric_difference(y)},
+                   ]
+	

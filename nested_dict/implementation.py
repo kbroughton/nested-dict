@@ -169,7 +169,7 @@ def _recursive_update(nd, other, strategies=[]):
     for key, value in iteritems(other):
         #print ("key=", key)
         strategy = get_strategy(nd[key], other[key], strategies, strategy_options)
-        print("strategy for {} {} is {}".format(key, value, strategy))
+        #print("strategy for {} {} is {}".format(key, value, strategy))
         if isinstance(value, (dict,)):
 
             # recursive update if my item is nested_dict
@@ -187,7 +187,7 @@ def _recursive_update(nd, other, strategies=[]):
                 nd[key] = value
         # combine by specified matching strategy
         elif strategy:
-            print(nd[key], strategy(nd[key], value))
+            #print(nd[key], strategy(nd[key], value))
             nd[key] = strategy(nd[key], value)        
         # other not dict: overwrite
         else:

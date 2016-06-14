@@ -243,3 +243,23 @@ class Test_nested_dict_methods(unittest.TestCase):
         # d1[2][3][4][5] = 6 but d1[2][3][5] should still be a default dict of list
         d1[2][3][5].append(4)
         self.assertEqual(d1.to_dict(), {1: {2: {3: [4], 4: [4]}}, 2: {3: {4: {5: 6}, 5: [4]}}})
+
+    def test_update_with_strategies(self):
+        """Test update with strategies"""
+        import nested_dict
+
+        #
+        # uniquely_extend_list
+        #
+        nd1 = nested_dict.nested_dict({'a':1,'f':[1,3,3]})
+        nd2 = nested_dict.nested_dict({'a':1,'f':[1,2]})
+        nd1.update(nd2, strategies=['uniquely_extend_list'])
+        self.assertEqual(nd1.to_dict, {'a':1,'f':[1,3,3,2]})
+
+        #
+        # list_of_union
+        #
+        nd1 = nested_dict.nested_dict({'a':1,'f':[1,3,3]})
+        nd2 = nested_dict.nested_dict({'a':1,'f':[1,2]})
+        nd1.update(nd2, strategies=['list_of_union'])
+        self.assertEqual(nd1.to_dict, {'a':1,'f':[1,3,2]})
